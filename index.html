@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Nhập Xuất Tồn Hàng Hóa</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Quản lý Nhập Xuất Tồn Hàng Hóa</h1>
+        </header>
+
+        <!-- Thống kê tổng quan -->
+        <section class="dashboard">
+            <div class="stat-card stat-products">
+                <div class="stat-icon">📦</div>
+                <div class="stat-info">
+                    <span class="stat-value" id="totalProducts">0</span>
+                    <span class="stat-label">Sản phẩm</span>
+                </div>
+            </div>
+            <div class="stat-card stat-import">
+                <div class="stat-icon">📥</div>
+                <div class="stat-info">
+                    <span class="stat-value" id="totalImport">0</span>
+                    <span class="stat-label">Tổng nhập</span>
+                </div>
+            </div>
+            <div class="stat-card stat-export">
+                <div class="stat-icon">📤</div>
+                <div class="stat-info">
+                    <span class="stat-value" id="totalExport">0</span>
+                    <span class="stat-label">Tổng xuất</span>
+                </div>
+            </div>
+            <div class="stat-card stat-stock">
+                <div class="stat-icon">🏪</div>
+                <div class="stat-info">
+                    <span class="stat-value" id="totalStock">0</span>
+                    <span class="stat-label">Tổng tồn</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabs điều hướng -->
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="products">Hàng hóa</button>
+            <button class="tab-btn" data-tab="suppliers">Nhà cung cấp</button>
+            <button class="tab-btn" data-tab="customers">Khách hàng</button>
+            <button class="tab-btn" data-tab="import">Nhập hàng</button>
+            <button class="tab-btn" data-tab="export">Xuất hàng</button>
+            <button class="tab-btn" data-tab="history">Lịch sử</button>
+            <button class="tab-btn" data-tab="reports">Báo cáo</button>
+        </nav>
+
+        <!-- Tab: Danh sách hàng hóa -->
+        <section class="tab-content active" id="tab-products">
+            <div class="section-header">
+                <h2>Danh sách hàng hóa</h2>
+                <button class="btn btn-primary" id="btnAddProduct">+ Thêm sản phẩm</button>
+            </div>
+
+            <div class="form-container hidden" id="productForm">
+                <h3 id="productFormTitle">Thêm sản phẩm mới</h3>
+                <form id="formProduct">
+                    <input type="hidden" id="productId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productCode">Mã hàng <span class="required">*</span></label>
+                            <input type="text" id="productCode" placeholder="VD: SP001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productName">Tên hàng hóa <span class="required">*</span></label>
+                            <input type="text" id="productName" placeholder="Nhập tên hàng hóa" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productUnit">Đơn vị tính <span class="required">*</span></label>
+                            <input type="text" id="productUnit" placeholder="VD: Cái, Kg, Hộp" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productPrice">Đơn giá (VNĐ)</label>
+                            <input type="number" id="productPrice" placeholder="0" min="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="productNote">Ghi chú</label>
+                        <textarea id="productNote" placeholder="Ghi chú thêm..." rows="2"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                        <button type="button" class="btn btn-secondary" id="btnCancelProduct">Hủy</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table id="productsTable">
+                    <thead>
+                        <tr>
+                            <th>Mã hàng</th>
+                            <th>Tên hàng hóa</th>
+                            <th>Đơn vị</th>
+                            <th>Đơn giá</th>
+                            <th>Tồn kho</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsBody">
+                        <tr class="empty-row">
+                            <td colspan="6">Chưa có sản phẩm nào. Nhấn "Thêm sản phẩm" để bắt đầu.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tab: Nhà cung cấp -->
+        <section class="tab-content" id="tab-suppliers">
+            <div class="section-header">
+                <h2>Danh mục Nhà cung cấp</h2>
+                <button class="btn btn-primary" id="btnAddSupplier">+ Thêm NCC</button>
+            </div>
+
+            <div class="form-container hidden" id="supplierForm">
+                <h3 id="supplierFormTitle">Thêm nhà cung cấp mới</h3>
+                <form id="formSupplier">
+                    <input type="hidden" id="supplierId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="supplierCode">Mã NCC <span class="required">*</span></label>
+                            <input type="text" id="supplierCode" placeholder="VD: NCC001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="supplierName">Tên nhà cung cấp <span class="required">*</span></label>
+                            <input type="text" id="supplierName" placeholder="Nhập tên NCC" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="supplierPhone">Số điện thoại</label>
+                            <input type="text" id="supplierPhone" placeholder="VD: 0901234567">
+                        </div>
+                        <div class="form-group">
+                            <label for="supplierEmail">Email</label>
+                            <input type="email" id="supplierEmail" placeholder="email@example.com">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="supplierTax">Mã số thuế</label>
+                            <input type="text" id="supplierTax" placeholder="Mã số thuế">
+                        </div>
+                        <div class="form-group">
+                            <label for="supplierAddress">Địa chỉ</label>
+                            <input type="text" id="supplierAddress" placeholder="Địa chỉ NCC">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="supplierNote">Ghi chú</label>
+                        <textarea id="supplierNote" placeholder="Ghi chú thêm..." rows="2"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                        <button type="button" class="btn btn-secondary" id="btnCancelSupplier">Hủy</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã NCC</th>
+                            <th>Tên nhà cung cấp</th>
+                            <th>Điện thoại</th>
+                            <th>Email</th>
+                            <th>Mã số thuế</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="suppliersBody">
+                        <tr class="empty-row">
+                            <td colspan="6">Chưa có nhà cung cấp nào.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tab: Khách hàng -->
+        <section class="tab-content" id="tab-customers">
+            <div class="section-header">
+                <h2>Danh mục Khách hàng</h2>
+                <button class="btn btn-primary" id="btnAddCustomer">+ Thêm khách hàng</button>
+            </div>
+
+            <div class="form-container hidden" id="customerForm">
+                <h3 id="customerFormTitle">Thêm khách hàng mới</h3>
+                <form id="formCustomer">
+                    <input type="hidden" id="customerId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customerCode">Mã KH <span class="required">*</span></label>
+                            <input type="text" id="customerCode" placeholder="VD: KH001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customerName">Tên khách hàng <span class="required">*</span></label>
+                            <input type="text" id="customerName" placeholder="Nhập tên khách hàng" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customerPhone">Số điện thoại</label>
+                            <input type="text" id="customerPhone" placeholder="VD: 0901234567">
+                        </div>
+                        <div class="form-group">
+                            <label for="customerEmail">Email</label>
+                            <input type="email" id="customerEmail" placeholder="email@example.com">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customerTax">Mã số thuế</label>
+                            <input type="text" id="customerTax" placeholder="Mã số thuế">
+                        </div>
+                        <div class="form-group">
+                            <label for="customerAddress">Địa chỉ</label>
+                            <input type="text" id="customerAddress" placeholder="Địa chỉ khách hàng">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerNote">Ghi chú</label>
+                        <textarea id="customerNote" placeholder="Ghi chú thêm..." rows="2"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                        <button type="button" class="btn btn-secondary" id="btnCancelCustomer">Hủy</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã KH</th>
+                            <th>Tên khách hàng</th>
+                            <th>Điện thoại</th>
+                            <th>Email</th>
+                            <th>Mã số thuế</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersBody">
+                        <tr class="empty-row">
+                            <td colspan="6">Chưa có khách hàng nào.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tab: Nhập hàng -->
+        <section class="tab-content" id="tab-import">
+            <div class="section-header">
+                <h2>Phiếu nhập hàng</h2>
+            </div>
+            <div class="form-container">
+                <form id="formImport">
+                    <!-- Thông tin chung -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="importSupplier">Nhà cung cấp <span class="required">*</span></label>
+                            <select id="importSupplier" required>
+                                <option value="">-- Chọn nhà cung cấp --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="importDate">Ngày nhập <span class="required">*</span></label>
+                            <input type="date" id="importDate" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="importInvoiceSeri">Seri hóa đơn</label>
+                            <input type="text" id="importInvoiceSeri" placeholder="VD: 1C23TAA">
+                        </div>
+                        <div class="form-group">
+                            <label for="importInvoiceNumber">Số hóa đơn</label>
+                            <input type="text" id="importInvoiceNumber" placeholder="VD: 0000123">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="importNote">Ghi chú</label>
+                        <input type="text" id="importNote" placeholder="Ghi chú phiếu nhập...">
+                    </div>
+
+                    <!-- Bảng chi tiết hàng hóa -->
+                    <div class="voucher-lines">
+                        <div class="voucher-lines-header">
+                            <h4>Chi tiết hàng hóa</h4>
+                            <button type="button" class="btn btn-primary btn-sm" id="btnAddImportLine">+ Thêm dòng</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="lines-table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Sản phẩm</th>
+                                        <th>Số lượng</th>
+                                        <th>Đơn giá</th>
+                                        <th>Tiền hàng</th>
+                                        <th>Thuế</th>
+                                        <th>Thành tiền</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="importLinesBody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Tổng cộng -->
+                        <div class="voucher-totals">
+                            <div class="total-row">
+                                <span class="total-label">Tổng tiền hàng:</span>
+                                <span class="total-value" id="importTotalAmount">0 đ</span>
+                            </div>
+                            <div class="total-row">
+                                <span class="total-label">Tổng thuế:</span>
+                                <span class="total-value" id="importTotalTax">0 đ</span>
+                            </div>
+                            <div class="total-row total-grand">
+                                <span class="total-label">Tổng cộng:</span>
+                                <span class="total-value" id="importGrandTotal">0 đ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">Xác nhận nhập hàng</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Tab: Xuất hàng -->
+        <section class="tab-content" id="tab-export">
+            <div class="section-header">
+                <h2>Phiếu xuất hàng</h2>
+            </div>
+            <div class="form-container">
+                <form id="formExport">
+                    <!-- Thông tin chung -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="exportCustomer">Khách hàng <span class="required">*</span></label>
+                            <select id="exportCustomer" required>
+                                <option value="">-- Chọn khách hàng --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="exportDate">Ngày xuất <span class="required">*</span></label>
+                            <input type="date" id="exportDate" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="exportInvoiceSeri">Seri hóa đơn</label>
+                            <input type="text" id="exportInvoiceSeri" placeholder="VD: 1C23TAA">
+                        </div>
+                        <div class="form-group">
+                            <label for="exportInvoiceNumber">Số hóa đơn</label>
+                            <input type="text" id="exportInvoiceNumber" placeholder="VD: 0000123">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="exportNote">Ghi chú</label>
+                        <input type="text" id="exportNote" placeholder="Ghi chú phiếu xuất...">
+                    </div>
+
+                    <!-- Bảng chi tiết hàng hóa -->
+                    <div class="voucher-lines">
+                        <div class="voucher-lines-header">
+                            <h4>Chi tiết hàng hóa</h4>
+                            <button type="button" class="btn btn-primary btn-sm" id="btnAddExportLine">+ Thêm dòng</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="lines-table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Sản phẩm</th>
+                                        <th>Số lượng</th>
+                                        <th>Đơn giá</th>
+                                        <th>Tiền hàng</th>
+                                        <th>Thuế</th>
+                                        <th>Thành tiền</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="exportLinesBody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Tổng cộng -->
+                        <div class="voucher-totals">
+                            <div class="total-row">
+                                <span class="total-label">Tổng tiền hàng:</span>
+                                <span class="total-value" id="exportTotalAmount">0 đ</span>
+                            </div>
+                            <div class="total-row">
+                                <span class="total-label">Tổng thuế:</span>
+                                <span class="total-value" id="exportTotalTax">0 đ</span>
+                            </div>
+                            <div class="total-row total-grand">
+                                <span class="total-label">Tổng cộng:</span>
+                                <span class="total-value" id="exportGrandTotal">0 đ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-danger">Xác nhận xuất hàng</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Tab: Lịch sử giao dịch -->
+        <section class="tab-content" id="tab-history">
+            <div class="section-header">
+                <h2>Lịch sử giao dịch</h2>
+                <div class="filter-group">
+                    <select id="filterType">
+                        <option value="all">Tất cả</option>
+                        <option value="import">Nhập hàng</option>
+                        <option value="export">Xuất hàng</option>
+                    </select>
+                    <input type="text" id="filterSearch" placeholder="Tìm kiếm...">
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>Ngày</th>
+                            <th>Loại</th>
+                            <th>NCC / Khách hàng</th>
+                            <th>Hàng hóa</th>
+                            <th>SL</th>
+                            <th>Tiền hàng</th>
+                            <th>Thuế</th>
+                            <th>Tổng tiền</th>
+                            <th>Seri - Số HĐ</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr class="empty-row">
+                            <td colspan="10">Chưa có giao dịch nào.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tab: Báo cáo -->
+        <section class="tab-content" id="tab-reports">
+            <div class="section-header">
+                <h2>Báo cáo</h2>
+            </div>
+
+            <!-- Sub-tabs báo cáo -->
+            <div class="report-tabs">
+                <button class="report-tab-btn active" data-report="inventory">Nhập xuất tồn kho</button>
+                <button class="report-tab-btn" data-report="import-detail">Bảng kê chi tiết nhập</button>
+                <button class="report-tab-btn" data-report="export-detail">Bảng kê chi tiết xuất</button>
+            </div>
+
+            <!-- Bộ lọc -->
+            <div class="report-filters">
+                <div class="filter-row">
+                    <div class="filter-item">
+                        <label>Từ ngày</label>
+                        <input type="date" id="rptFromDate">
+                    </div>
+                    <div class="filter-item">
+                        <label>Đến ngày</label>
+                        <input type="date" id="rptToDate">
+                    </div>
+                    <div class="filter-item">
+                        <label>Sản phẩm</label>
+                        <select id="rptProduct">
+                            <option value="">-- Tất cả --</option>
+                        </select>
+                    </div>
+                    <div class="filter-item" id="rptPartnerGroup">
+                        <label id="rptPartnerLabel">NCC / Khách hàng</label>
+                        <select id="rptPartner">
+                            <option value="">-- Tất cả --</option>
+                        </select>
+                    </div>
+                    <div class="filter-item filter-actions">
+                        <button type="button" class="btn btn-primary" id="btnRunReport">Xem báo cáo</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kết quả: Nhập xuất tồn kho -->
+            <div class="report-content active" id="report-inventory">
+                <div class="table-container">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Mã hàng</th>
+                                <th>Tên hàng hóa</th>
+                                <th>ĐVT</th>
+                                <th>Tồn đầu kỳ</th>
+                                <th>Nhập trong kỳ</th>
+                                <th>Xuất trong kỳ</th>
+                                <th>Tồn cuối kỳ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rptInventoryBody">
+                            <tr class="empty-row"><td colspan="7">Nhấn "Xem báo cáo" để hiển thị dữ liệu.</td></tr>
+                        </tbody>
+                        <tfoot id="rptInventoryFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Kết quả: Bảng kê chi tiết nhập -->
+            <div class="report-content" id="report-import-detail">
+                <div class="table-container">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th>Seri - Số HĐ</th>
+                                <th>Nhà cung cấp</th>
+                                <th>Mã hàng</th>
+                                <th>Tên hàng hóa</th>
+                                <th>SL</th>
+                                <th>Đơn giá</th>
+                                <th>Tiền hàng</th>
+                                <th>Thuế</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rptImportBody">
+                            <tr class="empty-row"><td colspan="10">Nhấn "Xem báo cáo" để hiển thị dữ liệu.</td></tr>
+                        </tbody>
+                        <tfoot id="rptImportFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Kết quả: Bảng kê chi tiết xuất -->
+            <div class="report-content" id="report-export-detail">
+                <div class="table-container">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th>Seri - Số HĐ</th>
+                                <th>Khách hàng</th>
+                                <th>Mã hàng</th>
+                                <th>Tên hàng hóa</th>
+                                <th>SL</th>
+                                <th>Đơn giá</th>
+                                <th>Tiền hàng</th>
+                                <th>Thuế</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rptExportBody">
+                            <tr class="empty-row"><td colspan="10">Nhấn "Xem báo cáo" để hiển thị dữ liệu.</td></tr>
+                        </tbody>
+                        <tfoot id="rptExportFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal sửa chứng từ -->
+    <div class="modal hidden" id="editTransModal">
+        <div class="modal-overlay" id="editTransOverlay"></div>
+        <div class="modal-content modal-wide">
+            <h3 id="editTransTitle">Sửa chứng từ</h3>
+            <form id="formEditTrans">
+                <input type="hidden" id="editTransId">
+                <input type="hidden" id="editTransType">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label id="editTransPartnerLabel">NCC / Khách hàng <span class="required">*</span></label>
+                        <select id="editTransPartner" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editTransDate">Ngày <span class="required">*</span></label>
+                        <input type="date" id="editTransDate" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editTransSeri">Seri hóa đơn</label>
+                        <input type="text" id="editTransSeri">
+                    </div>
+                    <div class="form-group">
+                        <label for="editTransInvoiceNum">Số hóa đơn</label>
+                        <input type="text" id="editTransInvoiceNum">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editTransNote">Ghi chú</label>
+                    <input type="text" id="editTransNote">
+                </div>
+                <!-- Chi tiết hàng hóa -->
+                <div class="voucher-lines">
+                    <div class="voucher-lines-header">
+                        <h4>Chi tiết hàng hóa</h4>
+                        <button type="button" class="btn btn-primary btn-sm" id="btnAddEditLine">+ Thêm dòng</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="lines-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Số lượng</th>
+                                    <th>Đơn giá</th>
+                                    <th>Tiền hàng</th>
+                                    <th>Thuế</th>
+                                    <th>Thành tiền</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="editLinesBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="voucher-totals">
+                        <div class="total-row">
+                            <span class="total-label">Tổng tiền hàng:</span>
+                            <span class="total-value" id="editTotalAmount">0 đ</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">Tổng thuế:</span>
+                            <span class="total-value" id="editTotalTax">0 đ</span>
+                        </div>
+                        <div class="total-row total-grand">
+                            <span class="total-label">Tổng cộng:</span>
+                            <span class="total-value" id="editGrandTotal">0 đ</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    <button type="button" class="btn btn-secondary" id="btnCancelEditTrans">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal xác nhận xóa -->
+    <div class="modal hidden" id="deleteModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <h3>Xác nhận xóa</h3>
+            <p id="deleteMessage">Bạn có chắc chắn muốn xóa mục này? Hành động này không thể hoàn tác.</p>
+            <div class="modal-actions">
+                <button class="btn btn-danger" id="btnConfirmDelete">Xóa</button>
+                <button class="btn btn-secondary" id="btnCancelDelete">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
