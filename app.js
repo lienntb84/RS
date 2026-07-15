@@ -1151,6 +1151,224 @@
     }
 
     // =============================================
+    // EXCEL IMPORT
+    // =============================================
+    var importHelpModal = document.getElementById('importHelpModal');
+    var importHelpContent = document.getElementById('importHelpContent');
+    var importHelpTitle = document.getElementById('importHelpTitle');
+
+    document.getElementById('btnCloseImportHelp').addEventListener('click', function () { importHelpModal.classList.add('hidden'); });
+    document.getElementById('importHelpOverlay').addEventListener('click', function () { importHelpModal.classList.add('hidden'); });
+
+    function showImportResult(title, html) {
+        importHelpTitle.textContent = title;
+        importHelpContent.innerHTML = html;
+        importHelpModal.classList.remove('hidden');
+    }
+
+    function readExcelFile(file, callback) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            try {
+                var data = new Uint8Array(e.target.result);
+                var workbook = XLSX.read(data, { type: 'array' });
+                var sheetName = workbook.SheetNames[0];
+                var sheet = workbook.Sheets[sheetName];
+                var json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                callback(null, json);
+            } catch (err) {
+                callback(err, null);
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function normalizeHeader(h) {
+        return (h || '').toString().trim().toLowerCase()
+            .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, 'a')
+            .replace(/[èéẹẻẽêềếệểễ]/g, 'e')
+            .replace(/[ìíịỉĩ]/g, 'i')
+            .replace(/[òóọỏõôồốộổỗơờớợởỡ]/g, 'o')
+            .replace(/[ùúụủũưừứựửữ]/g, 'u')
+            .replace(/[ỳýỵỷỹ]/g, 'y')
+            .replace(/đ/g, 'd')
+            .replace(/[^a-z0-9]/g, '');
+    }
+
+    function findCol(row, keywords) {
+        var keys = Object.keys(row);
+        for (var i = 0; i < keys.length; i++) {
+            var norm = normalizeHeader(keys[i]);
+            for (var j = 0; j < keywords.length; j++) {
+                if (norm.includes(keywords[j])) return keys[i];
+            }
+        }
+        return null;
+    }
+
+    // --- Import Sản phẩm ---
+    document.getElementById('importExcelProduct').addEventListener('change', function (e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        e.target.value = '';
+
+        readExcelFile(file, function (err, rows) {
+            if (err || !rows || !rows.length) {
+                showImportResult('Import Sản phẩm', '<div class="import-summary error">Không đọc được file hoặc file rỗng.</div>' + getProductFormatHelp());
+                return;
+            }
+
+            var added = 0, skipped = 0, errors = [];
+            rows.forEach(function (row, idx) {
+                var colCode = findCol(row, ['mahang', 'masp', 'code', 'ma']);
+                var colName = findCol(row, ['tenhang', 'tensp', 'tensanpham', 'name', 'ten']);
+                var colUnit = findCol(row, ['donvi', 'dvt', 'unit', 'donvitinh']);
+                var colPrice = findCol(row, ['dongia', 'gia', 'price', 'giaban']);
+                var colNote = findCol(row, ['ghichu', 'note', 'mota']);
+
+                var code = colCode ? String(row[colCode]).trim() : '';
+                var name = colName ? String(row[colName]).trim() : '';
+                var unit = colUnit ? String(row[colUnit]).trim() : '';
+                var price = colPrice ? (parseInt(row[colPrice]) || 0) : 0;
+                var note = colNote ? String(row[colNote]).trim() : '';
+
+                if (!code || !name) { skipped++; return; }
+                if (products.find(function (p) { return p.code === code; })) { skipped++; errors.push('Dòng ' + (idx+2) + ': Mã "' + code + '" đã tồn tại'); return; }
+                if (!unit) unit = 'Cái';
+
+                products.push({ id: generateId(), code: code, name: name, unit: unit, price: price, note: note, stock: 0, createdAt: new Date().toISOString() });
+                added++;
+            });
+
+            saveData(STORAGE_KEYS.PRODUCTS, products);
+            renderProducts(); updateDashboard();
+
+            var html = '<div class="import-summary ' + (added > 0 ? 'success' : 'warning') + '">' +
+                'Đã import: <strong>' + added + '</strong> sản phẩm. Bỏ qua: <strong>' + skipped + '</strong> dòng.</div>';
+            if (errors.length) html += '<div class="import-summary warning">' + errors.slice(0, 10).join('<br>') + (errors.length > 10 ? '<br>...' : '') + '</div>';
+            html += getProductFormatHelp();
+            showImportResult('Import Sản phẩm', html);
+        });
+    });
+
+    function getProductFormatHelp() {
+        return '<div class="import-format"><h4>Định dạng file Excel yêu cầu:</h4>' +
+            '<p>Dòng 1 là tiêu đề cột. Các cột nhận diện:</p>' +
+            '<code>Mã hàng | Tên hàng | Đơn vị | Đơn giá | Ghi chú</code>' +
+            '<p style="margin-top:6px;font-size:0.78rem;color:#6c757d;">Cột bắt buộc: Mã hàng, Tên hàng. Tên cột linh hoạt (VD: "Mã SP", "Code", "Tên sản phẩm"...)</p></div>';
+    }
+
+    // --- Import Nhà cung cấp ---
+    document.getElementById('importExcelSupplier').addEventListener('change', function (e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        e.target.value = '';
+
+        readExcelFile(file, function (err, rows) {
+            if (err || !rows || !rows.length) {
+                showImportResult('Import Nhà cung cấp', '<div class="import-summary error">Không đọc được file hoặc file rỗng.</div>' + getSupplierFormatHelp());
+                return;
+            }
+
+            var added = 0, skipped = 0, errors = [];
+            rows.forEach(function (row, idx) {
+                var colCode = findCol(row, ['mancc', 'macc', 'code', 'ma']);
+                var colName = findCol(row, ['tenncc', 'tencc', 'nhacungcap', 'name', 'ten']);
+                var colPhone = findCol(row, ['dienthoai', 'sdt', 'phone', 'dt']);
+                var colEmail = findCol(row, ['email', 'mail']);
+                var colTax = findCol(row, ['masothue', 'mst', 'tax']);
+                var colAddress = findCol(row, ['diachi', 'address', 'dc']);
+                var colNote = findCol(row, ['ghichu', 'note']);
+
+                var code = colCode ? String(row[colCode]).trim() : '';
+                var name = colName ? String(row[colName]).trim() : '';
+                var phone = colPhone ? String(row[colPhone]).trim() : '';
+                var email = colEmail ? String(row[colEmail]).trim() : '';
+                var tax = colTax ? String(row[colTax]).trim() : '';
+                var address = colAddress ? String(row[colAddress]).trim() : '';
+                var note = colNote ? String(row[colNote]).trim() : '';
+
+                if (!code || !name) { skipped++; return; }
+                if (suppliers.find(function (s) { return s.code === code; })) { skipped++; errors.push('Dòng ' + (idx+2) + ': Mã "' + code + '" đã tồn tại'); return; }
+
+                suppliers.push({ id: generateId(), code: code, name: name, phone: phone, email: email, tax: tax, address: address, note: note });
+                added++;
+            });
+
+            saveData(STORAGE_KEYS.SUPPLIERS, suppliers);
+            renderSuppliers();
+
+            var html = '<div class="import-summary ' + (added > 0 ? 'success' : 'warning') + '">' +
+                'Đã import: <strong>' + added + '</strong> NCC. Bỏ qua: <strong>' + skipped + '</strong> dòng.</div>';
+            if (errors.length) html += '<div class="import-summary warning">' + errors.slice(0, 10).join('<br>') + (errors.length > 10 ? '<br>...' : '') + '</div>';
+            html += getSupplierFormatHelp();
+            showImportResult('Import Nhà cung cấp', html);
+        });
+    });
+
+    function getSupplierFormatHelp() {
+        return '<div class="import-format"><h4>Định dạng file Excel yêu cầu:</h4>' +
+            '<p>Dòng 1 là tiêu đề cột. Các cột nhận diện:</p>' +
+            '<code>Mã NCC | Tên NCC | Điện thoại | Email | Mã số thuế | Địa chỉ | Ghi chú</code>' +
+            '<p style="margin-top:6px;font-size:0.78rem;color:#6c757d;">Cột bắt buộc: Mã NCC, Tên NCC. Tên cột linh hoạt.</p></div>';
+    }
+
+    // --- Import Khách hàng ---
+    document.getElementById('importExcelCustomer').addEventListener('change', function (e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        e.target.value = '';
+
+        readExcelFile(file, function (err, rows) {
+            if (err || !rows || !rows.length) {
+                showImportResult('Import Khách hàng', '<div class="import-summary error">Không đọc được file hoặc file rỗng.</div>' + getCustomerFormatHelp());
+                return;
+            }
+
+            var added = 0, skipped = 0, errors = [];
+            rows.forEach(function (row, idx) {
+                var colCode = findCol(row, ['makh', 'makH', 'code', 'ma']);
+                var colName = findCol(row, ['tenkh', 'tenkhachhang', 'khachhang', 'name', 'ten']);
+                var colPhone = findCol(row, ['dienthoai', 'sdt', 'phone', 'dt']);
+                var colEmail = findCol(row, ['email', 'mail']);
+                var colTax = findCol(row, ['masothue', 'mst', 'tax']);
+                var colAddress = findCol(row, ['diachi', 'address', 'dc']);
+                var colNote = findCol(row, ['ghichu', 'note']);
+
+                var code = colCode ? String(row[colCode]).trim() : '';
+                var name = colName ? String(row[colName]).trim() : '';
+                var phone = colPhone ? String(row[colPhone]).trim() : '';
+                var email = colEmail ? String(row[colEmail]).trim() : '';
+                var tax = colTax ? String(row[colTax]).trim() : '';
+                var address = colAddress ? String(row[colAddress]).trim() : '';
+                var note = colNote ? String(row[colNote]).trim() : '';
+
+                if (!code || !name) { skipped++; return; }
+                if (customers.find(function (c) { return c.code === code; })) { skipped++; errors.push('Dòng ' + (idx+2) + ': Mã "' + code + '" đã tồn tại'); return; }
+
+                customers.push({ id: generateId(), code: code, name: name, phone: phone, email: email, tax: tax, address: address, note: note });
+                added++;
+            });
+
+            saveData(STORAGE_KEYS.CUSTOMERS, customers);
+            renderCustomers();
+
+            var html = '<div class="import-summary ' + (added > 0 ? 'success' : 'warning') + '">' +
+                'Đã import: <strong>' + added + '</strong> khách hàng. Bỏ qua: <strong>' + skipped + '</strong> dòng.</div>';
+            if (errors.length) html += '<div class="import-summary warning">' + errors.slice(0, 10).join('<br>') + (errors.length > 10 ? '<br>...' : '') + '</div>';
+            html += getCustomerFormatHelp();
+            showImportResult('Import Khách hàng', html);
+        });
+    });
+
+    function getCustomerFormatHelp() {
+        return '<div class="import-format"><h4>Định dạng file Excel yêu cầu:</h4>' +
+            '<p>Dòng 1 là tiêu đề cột. Các cột nhận diện:</p>' +
+            '<code>Mã KH | Tên KH | Điện thoại | Email | Mã số thuế | Địa chỉ | Ghi chú</code>' +
+            '<p style="margin-top:6px;font-size:0.78rem;color:#6c757d;">Cột bắt buộc: Mã KH, Tên KH. Tên cột linh hoạt.</p></div>';
+    }
+
+    // =============================================
     // EXPOSE & INIT
     // =============================================
     window.app = {

@@ -700,6 +700,80 @@ tbody tr:hover {
     font-size: 1.1rem;
 }
 
+/* Header actions (group buttons) */
+.header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Import Excel button */
+.btn-import {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.btn-import input[type="file"] {
+    display: none;
+}
+
+/* Import help modal content */
+#importHelpContent {
+    text-align: left;
+    margin-bottom: 16px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#importHelpContent .import-summary {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+#importHelpContent .import-summary.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+#importHelpContent .import-summary.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+#importHelpContent .import-summary.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+#importHelpContent .import-format {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 0.82rem;
+}
+
+#importHelpContent .import-format h4 {
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+#importHelpContent .import-format code {
+    display: block;
+    background: #e9ecef;
+    padding: 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.78rem;
+    white-space: pre-wrap;
+    margin-top: 6px;
+}
+
 /* ===== REPORTS ===== */
 .report-tabs {
     display: flex;

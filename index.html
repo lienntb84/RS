@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Nhập Xuất Tồn Hàng Hóa</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -59,7 +60,13 @@
         <section class="tab-content active" id="tab-products">
             <div class="section-header">
                 <h2>Danh sách hàng hóa</h2>
-                <button class="btn btn-primary" id="btnAddProduct">+ Thêm sản phẩm</button>
+                <div class="header-actions">
+                    <label class="btn btn-success btn-import" title="Import từ file Excel">
+                        📥 Import Excel
+                        <input type="file" accept=".xlsx,.xls,.csv" id="importExcelProduct" hidden>
+                    </label>
+                    <button class="btn btn-primary" id="btnAddProduct">+ Thêm sản phẩm</button>
+                </div>
             </div>
 
             <div class="form-container hidden" id="productForm">
@@ -122,7 +129,13 @@
         <section class="tab-content" id="tab-suppliers">
             <div class="section-header">
                 <h2>Danh mục Nhà cung cấp</h2>
-                <button class="btn btn-primary" id="btnAddSupplier">+ Thêm NCC</button>
+                <div class="header-actions">
+                    <label class="btn btn-success btn-import" title="Import từ file Excel">
+                        📥 Import Excel
+                        <input type="file" accept=".xlsx,.xls,.csv" id="importExcelSupplier" hidden>
+                    </label>
+                    <button class="btn btn-primary" id="btnAddSupplier">+ Thêm NCC</button>
+                </div>
             </div>
 
             <div class="form-container hidden" id="supplierForm">
@@ -195,7 +208,13 @@
         <section class="tab-content" id="tab-customers">
             <div class="section-header">
                 <h2>Danh mục Khách hàng</h2>
-                <button class="btn btn-primary" id="btnAddCustomer">+ Thêm khách hàng</button>
+                <div class="header-actions">
+                    <label class="btn btn-success btn-import" title="Import từ file Excel">
+                        📥 Import Excel
+                        <input type="file" accept=".xlsx,.xls,.csv" id="importExcelCustomer" hidden>
+                    </label>
+                    <button class="btn btn-primary" id="btnAddCustomer">+ Thêm khách hàng</button>
+                </div>
             </div>
 
             <div class="form-container hidden" id="customerForm">
@@ -663,6 +682,18 @@
                     <button type="button" class="btn btn-secondary" id="btnCancelEditTrans">Hủy</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal hướng dẫn import Excel -->
+    <div class="modal hidden" id="importHelpModal">
+        <div class="modal-overlay" id="importHelpOverlay"></div>
+        <div class="modal-content modal-wide">
+            <h3 id="importHelpTitle">Kết quả Import Excel</h3>
+            <div id="importHelpContent"></div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="btnCloseImportHelp">Đóng</button>
+            </div>
         </div>
     </div>
 
